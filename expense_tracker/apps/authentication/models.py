@@ -1,7 +1,4 @@
-from django import models
 from django.contrib.auth.models import User
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    
-
+# Using Django's built-in User model
+# No custom model needed for basic authentication
