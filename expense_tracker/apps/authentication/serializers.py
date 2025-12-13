@@ -15,6 +15,7 @@ class UserRegistrationSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
+        validated_data.pop('password2')  # Remove password2 before creating user
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
