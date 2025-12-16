@@ -6,4 +6,5 @@ urlpatterns = [
     path('create/', views.create_expense, name='create_expense'),
     path('<int:pk>/update/', views.update_expense, name='update_expense'),
     path('<int:pk>/delete/', views.delete_expense, name='delete_expense'),
+    path('summary/', views.expense_summary, name='expense_summary')
 ]
