@@ -5,8 +5,10 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Sum, Count, Avg
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Expenses
 from .serializers import ExpensesSerializer
+from .filters import ExpenseFilter
 
 class ExpensesPagination(PageNumberPagination):
     page_size = 5  # Number of expenses per page
@@ -14,123 +16,156 @@ class ExpensesPagination(PageNumberPagination):
     max_page_size = 100
 
 class ExpensesViewSet(viewsets.ModelViewSet):
-    queryset = Expenses.objects.all()
     serializer_class = ExpensesSerializer
-
-    def create_expense(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def update_expense(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def delete_expense(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ExpenseFilter
+    
+    def get_queryset(self):
+        return Expenses.objects.select_related('category', 'user').filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
-# Function-based views for URLs
+# Function-based views for URLs (kept for backward compatibility)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def list_expenses(request):
-    expenses = Expenses.objects.filter(user=request.user)
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    """
+    List user's expenses with filtering and pagination.
     
-    # date filtering
-    period = request.GET.get('period')
-    if period == 'weekly':
-        expenses = expenses.filter(date__gte='2025-01-01')  # Last 7 days
-    elif period == 'monthly':
-        expenses = expenses.filter(date__gte='2024-12-01')  # Last 30 days
-    elif period == 'last_3_months':
-        expenses = expenses.filter(date__gte='2024-10-01')  # Last 90 days
+    Query Parameters:
+    - period: weekly, monthly, last_3_months
+    - category: category ID
+    - page: page number
+    - page_size: items per page (max 100)
+    """
+    expenses = Expenses.objects.select_related('category', 'user').filter(user=request.user)
     
-    # category filtering
-    category = request.GET.get('category')
-    if category:
-        try:
-            expenses = expenses.filter(category=category)
-        except Exception:
-            return Response({'error': 'Invalid category ID'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Check if expenses exist first
-    if not expenses.exists():
+    # Apply filtering using the FilterSet
+    expense_filter = ExpenseFilter(request.GET, queryset=expenses)
+    filtered_expenses = expense_filter.qs
+    
+    # Check if expenses exist
+    if not filtered_expenses.exists():
         return Response({'message': 'No expenses found.'})
     
     # Pagination
     paginator = ExpensesPagination()
-    paginated_expenses = paginator.paginate_queryset(expenses, request)
+    paginated_expenses = paginator.paginate_queryset(filtered_expenses, request)
     
     if paginated_expenses is not None:
         serializer = ExpensesSerializer(paginated_expenses, many=True)
         return paginator.get_paginated_response(serializer.data)
     
     # Fallback if pagination fails
-    serializer = ExpensesSerializer(expenses, many=True)
+    serializer = ExpensesSerializer(filtered_expenses, many=True)
     return Response(serializer.data)
 
 
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def create_expense(request):
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    """
+    Create a new expense for the authenticated user.
+    
+    Required fields:
+    - amount: decimal
+    - description: string
+    - category: category ID
+    """
     serializer = ExpensesSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
 def update_expense(request, pk):
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
-        expense = Expenses.objects.get(pk=pk, user=request.user)
+        expense = Expenses.objects.select_related('category', 'user').get(pk=pk, user=request.user)
     except Expenses.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Expense not found.'}, status=status.HTTP_404_NOT_FOUND)
     
     serializer = ExpensesSerializer(expense, data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
 def delete_expense(request, pk):
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
-        expense = Expenses.objects.get(pk=pk, user=request.user)
+        expense = Expenses.objects.select_related('category', 'user').get(pk=pk, user=request.user)
     except Expenses.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Expense not found.'}, status=status.HTTP_404_NOT_FOUND)
     
     expense.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def expense_summary(request):
-    expenses = Expenses.objects.filter(user=request.user)
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    """
+    Get expense analytics and summary for the authenticated user.
     
-    totals = expenses.aggregate(
-    total_amount=Sum('amount'),
-    total_count=Count('id'),
-    average_amount=Avg('amount')
+    Query Parameters:
+    - period: weekly, monthly, last_3_months (optional)
+    - category: category ID (optional)
+    
+    Returns:
+    - Total amount, count, average
+    - Category breakdown with percentages
+    """
+    expenses = Expenses.objects.select_related('category', 'user').filter(user=request.user)
+    
+    # period filtering using the same FilterSet
+    expense_filter = ExpenseFilter(request.GET, queryset=expenses)
+    filtered_expenses = expense_filter.qs
+    
+    # Basic totals
+    totals = filtered_expenses.aggregate(
+        total_amount=Sum('amount'),
+        total_count=Count('id'),
+        average_amount=Avg('amount')
     )
     
-    categories = expenses.values('category__name').annotate(total=Sum('amount'))
+    # Category breakdown with percentages
+    categories = filtered_expenses.values('category__name').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')
+    
+    total_amount = totals['total_amount'] or 0
+    category_breakdown = []
+    for cat in categories:
+        percentage = (cat['total'] / total_amount * 100) if total_amount > 0 else 0
+        category_breakdown.append({
+            'name': cat['category__name'],
+            'total': cat['total'],
+            'count': cat['count'],
+            'percentage': round(percentage, 2)
+        })
     
     return Response({
-        'total_amount': totals['total_amount'] or 0,
-        'total_count': totals['total_count'] or 0,
-        'average_amount': totals['average_amount'] or 0,
-        'categories': list(categories)
+        'summary': {
+            'total_amount': total_amount,
+            'total_count': totals['total_count'] or 0,
+            'average_amount': round(totals['average_amount'] or 0, 2)
+        },
+        'category_breakdown': category_breakdown,
+        'period': request.GET.get('period', 'all_time')
     })
