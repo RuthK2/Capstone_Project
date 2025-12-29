@@ -1,1 +1,1 @@
-web: cd expense_tracker && python manage.py migrate --run-syncdb && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn expense_tracker.wsgi --log-file -
+web: cd expense_tracker && python manage.py init_db && python manage.py collectstatic --noinput && gunicorn expense_tracker.wsgi --log-file -
