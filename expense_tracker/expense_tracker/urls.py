@@ -16,9 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
+def api_root(request):
+    return JsonResponse({
+        'message': 'Expense Tracker API',
+        'endpoints': {
+            'auth': '/api/auth/',
+            'categories': '/api/categories/',
+            'expenses': '/api/expenses/',
+            'docs': '/api/docs/',
+            'admin': '/admin/'
+        }
+    })
+
 urlpatterns = [
+    path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('apps.authentication.urls')),
     path('api/categories/', include('apps.categories.urls')),
