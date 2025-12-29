@@ -1,2 +1,2 @@
-# Railway deployment
-web: cd expense_tracker && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn expense_tracker.wsgi --log-file -
+# Railway deployment - Force migrations
+web: cd expense_tracker && python manage.py migrate --run-syncdb --verbosity=2 && python manage.py migrate --verbosity=2 && python manage.py collectstatic --noinput && gunicorn expense_tracker.wsgi --log-file -
