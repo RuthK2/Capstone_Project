@@ -102,39 +102,23 @@ WSGI_APPLICATION = 'expense_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if os.environ.get('DATABASE_URL'):
-    import dj_database_url
-    try:
-        DATABASES = {
-            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-        }
-    except Exception:
-        # Fallback to SQLite if DATABASE_URL is invalid
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
-elif os.environ.get('DB_PASSWORD'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'expense_tracker'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-        }
+# Use SQLite for now to avoid PostgreSQL migration issues
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '/tmp/db.sqlite3',
     }
-else:
-    # Development fallback to SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
+
+# Uncomment below for PostgreSQL when migrations are fixed
+# if os.environ.get('DATABASE_URL'):
+#     import dj_database_url
+#     try:
+#         DATABASES = {
+#             'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+#         }
+#     except Exception:
+#         pass
 
 
 # Password validation
