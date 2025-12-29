@@ -99,26 +99,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'expense_tracker.wsgi.application'
 
 
-# Database
+# Database - Force SQLite for deployment
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Use SQLite for now to avoid PostgreSQL migration issues
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/tmp/db.sqlite3',
+        'NAME': '/tmp/expense_tracker.db',
     }
 }
-
-# Uncomment below for PostgreSQL when migrations are fixed
-# if os.environ.get('DATABASE_URL'):
-#     import dj_database_url
-#     try:
-#         DATABASES = {
-#             'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-#         }
-#     except Exception:
-#         pass
 
 
 # Password validation
