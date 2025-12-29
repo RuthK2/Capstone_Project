@@ -16,9 +16,9 @@ def protected_view(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        try:
+    try:
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
             return Response({
@@ -26,9 +26,9 @@ def register(request):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }, status=status.HTTP_201_CREATED)
-        except serializers.ValidationError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
