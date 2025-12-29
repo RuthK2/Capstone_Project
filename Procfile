@@ -1,1 +1,2 @@
-web: cd expense_tracker && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn expense_tracker.wsgi --log-file -
+release: cd expense_tracker && python manage.py migrate
+web: cd expense_tracker && python manage.py collectstatic --noinput && gunicorn expense_tracker.wsgi --log-file -
