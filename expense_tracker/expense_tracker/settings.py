@@ -104,9 +104,18 @@ WSGI_APPLICATION = 'expense_tracker.wsgi.application'
 
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        }
+    except Exception:
+        # Fallback to SQLite if DATABASE_URL is invalid
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 elif os.environ.get('DB_PASSWORD'):
     DATABASES = {
         'default': {
