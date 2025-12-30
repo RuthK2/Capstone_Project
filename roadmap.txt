@@ -1,16 +1,16 @@
-EXPENSE TRACKER API - PROJECT ROADMAP
-=====================================
+EXPENSE TRACKER API - SIMPLE PROJECT PLAN
+==========================================
 
 PROJECT OVERVIEW
 -----------------
-An expense tracking REST API that allows users to manage their personal finances by tracking expenses across different categories with filtering capabilities.
+A simple expense tracking API where users can register, login, and manage their personal expenses.
 
 MAIN FEATURES
 -------------
-1. User Authentication & Management
-   - User registration/signup
+1. User Authentication
+   - User registration
    - User login/logout
-   - JWT token-based authentication
+   - Secure authentication with JWT tokens
 
 2. Expense Management
    - Add new expenses
@@ -18,27 +18,28 @@ MAIN FEATURES
    - Update existing expenses
    - Delete expenses
 
-3. Filtering & Analytics
-   - Filter by time periods (weekly, monthly, last 3 months)
-   - Filter by categories
-   - Basic expense summaries
-
-4. Category Management
+3. Categories
    - Predefined categories: Groceries, Electricity, Utilities, Miscellaneous, Electronics, Clothing
-   - Category-based expense organization
+   - Organize expenses by category
 
-API ENDPOINTS STRUCTURE
------------------------
+4. Basic Filtering
+   - Filter expenses by time periods
+   - Filter expenses by categories
+   - Simple expense summaries
+
+API ENDPOINTS
+--------------
 Authentication:
 - POST /api/auth/register
 - POST /api/auth/login
 - POST /api/auth/logout
 
 Expenses:
-- GET /api/expenses (with query params for filtering)
-- POST /api/expenses
-- PUT /api/expenses/:id
-- DELETE /api/expenses/:id
+- GET /api/expenses
+- POST /api/expenses/create
+- PUT /api/expenses/:id/update
+- DELETE /api/expenses/:id/delete
+- GET /api/expenses/summary
 
 Categories:
 - GET /api/categories
@@ -47,132 +48,39 @@ PROJECT STRUCTURE
 ------------------
 expense_tracker/
 ├── expense_tracker/
-│   ├── __init__.py
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
 ├── apps/
 │   ├── authentication/
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── serializers.py
-│   │   └── urls.py
 │   ├── expenses/
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── serializers.py
-│   │   └── urls.py
 │   └── categories/
-│       ├── models.py
-│       ├── views.py
-│       ├── serializers.py
-│       └── urls.py
 ├── tests/
 ├── requirements.txt
-├── .env
 └── manage.py
 
-TECHNOLOGY STACK
+TECHNOLOGY USED
 ----------------
-- Backend: Django with Django REST Framework (DRF)
-- Database: PostgreSQL or SQLite (for development)
-- Authentication: Django's built-in auth + JWT (djangorestframework-simplejwt)
-- Validation: DRF serializers with built-in validation
-- Testing: Django's TestCase and DRF APITestCase
-- Documentation: DRF's built-in API documentation
+- Django (Web framework)
+- Django REST Framework (API framework)
+- SQLite (Database)
+- JWT (Authentication tokens)
+- Railway (Deployment)
 
-DEVELOPMENT TIMELINE
---------------------
-
-Week 1: Project Setup & Authentication (Days 1-7)
-- Initialize Django project with DRF
-- Set up PostgreSQL/SQLite database
-- Create User model (extend AbstractUser if needed)
-- Implement JWT authentication with djangorestframework-simplejwt
-- Create registration and login endpoints
-- Test user authentication
-
-Week 2: Core Expense Management (Days 8-14)
-- Create Expense and Category Django models
-- Implement DRF ViewSets for CRUD operations
-- Set up serializers for data validation
-- Create URL patterns and routing
-- Add basic permissions and validation
-- Test expense operations
-
-Week 3: Filtering & Advanced Features (Days 15-21)
-- Implement Django QuerySet filtering (weekly, monthly, 3 months)
-- Add category-based filtering using django-filter
-- Create expense summary views with aggregation
-- Implement DRF pagination
-- Add custom validation and error handling
-
-Week 4: Testing & Documentation (Days 22-28)
-- Write Django unit tests and DRF API tests
-- Create integration tests with APITestCase
-- Set up DRF's automatic API documentation
-- Database optimization with indexes
-- Security enhancements and permissions
-
-Week 5: Deployment & Final Polish (Days 29-35)
-- Deploy to cloud platform (Heroku/PythonAnywhere/Railway)
-- Configure production settings and environment variables
-- Set up static files and database in production
-- Final testing in production environment
-- Create user documentation and code cleanup
-
-DAILY WORK SCHEDULE
--------------------
-- Days 1-2: Django project setup, virtual environment, DRF installation
-- Days 3-4: Database configuration, User model setup, migrations
-- Days 5-7: JWT authentication setup, registration/login views, testing
-
-- Days 8-9: Expense and Category models, database relationships, migrations
-- Days 10-11: DRF ViewSets, serializers for CRUD operations
-- Days 12-14: URL routing, permissions, validation, error handling
-
-- Days 15-16: Django QuerySet filtering by date ranges
-- Days 17-18: Category filtering with django-filter, search functionality
-- Days 19-21: Expense analytics with Django aggregation, DRF pagination
-
-- Days 22-24: Django TestCase and APITestCase for all components
-- Days 25-26: Integration tests, DRF API documentation setup
-- Days 27-28: Security testing, database optimization, performance tuning
-
-- Days 29-30: Production deployment setup, settings configuration
-- Days 31-32: Production testing, environment variables, bug fixes
-- Days 33-35: Documentation, final polish, project presentation
-
-MILESTONES
-----------
-- End of Week 1: Working authentication system
-- End of Week 2: Complete expense CRUD operations
-- End of Week 3: Full filtering and analytics features
-- End of Week 4: Tested and documented API
-- End of Week 5: Deployed and production-ready application
+DEVELOPMENT STEPS
+-----------------
+1. Setup Django project
+2. Create user authentication
+3. Build expense models
+4. Create API endpoints
+5. Add filtering features
+6. Write tests
+7. Deploy to production
 
 SUCCESS CRITERIA
 -----------------
-- Users can register and authenticate securely
-- Full expense management (add, view, edit, delete)
-- Effective filtering by time periods and categories
-- Clean, well-documented API
-- Comprehensive test coverage (>80%)
-- Successfully deployed and accessible
-
-POTENTIAL CHALLENGES & SOLUTIONS
---------------------------------
-- Database design complexity → Start with simple Django models, use migrations
-- Authentication security → Use djangorestframework-simplejwt best practices
-- Date filtering logic → Leverage Django QuerySet date lookups
-- API performance → Implement DRF pagination and database indexing
-- Testing coverage → Write tests alongside development using Django's testing framework
-
-FUTURE ENHANCEMENTS (Post-MVP)
-------------------------------
-- Budget setting and tracking
-- Expense receipt image uploads
-- Data export functionality
-- Mobile app integration
-- Advanced analytics and reporting
-- Multi-currency support
+- Users can register and login
+- Users can manage their expenses
+- Expenses can be filtered and summarized
+- API is well documented
+- Application is deployed and working
