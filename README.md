@@ -310,12 +310,6 @@ All list endpoints support pagination:
 - **API:** Django REST Framework
 - **Deployment:** Railway
 
-## 📚 API Documentation
-
-Interactive API documentation is available at:
-- **Swagger UI:** `https://web-production-c227c.up.railway.app/api/docs/`
-- **ReDoc:** `https://web-production-c227c.up.railway.app/api/redoc/`
-
 ## 🔗 Quick Start
 
 1. **Register a new account:**
