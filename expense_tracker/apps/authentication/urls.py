@@ -8,4 +8,5 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('protected/', views.protected_view, name='protected'),
+    path('create-admin/', views.create_admin, name='create_admin'),
 ]

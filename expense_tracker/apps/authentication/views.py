@@ -4,7 +4,27 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from .serializers import UserRegistrationSerializer, UserSerializer
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_admin(request):
+    # Simple admin creation (use only once)
+    if User.objects.filter(is_superuser=True).exists():
+        return Response({'message': 'Admin already exists'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    admin_user = User.objects.create_superuser(
+        username='admin',
+        email='admin@example.com',
+        password='admin123'
+    )
+    return Response({
+        'message': 'Admin created successfully',
+        'username': 'admin',
+        'password': 'admin123'
+    }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
