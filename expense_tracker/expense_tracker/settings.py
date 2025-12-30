@@ -175,11 +175,9 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
 }
 
-# API Documentation
+# API Documentation Settings
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Expense Tracker API',
-    'DESCRIPTION': 'A REST API for managing personal expenses with JWT authentication, filtering, and analytics.',
+    'DESCRIPTION': 'A simple API for tracking personal expenses',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
 }
