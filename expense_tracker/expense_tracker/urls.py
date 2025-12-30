@@ -17,7 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 def api_root(request):
     return JsonResponse({
@@ -26,7 +25,6 @@ def api_root(request):
             'auth': '/api/auth/',
             'categories': '/api/categories/',
             'expenses': '/api/expenses/',
-            'docs': '/api/docs/',
             'admin': '/admin/'
         }
     })
@@ -37,8 +35,4 @@ urlpatterns = [
     path('api/auth/', include('apps.authentication.urls')),
     path('api/categories/', include('apps.categories.urls')),
     path('api/expenses/', include('apps.expenses.urls')),
-    # API Documentation
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]

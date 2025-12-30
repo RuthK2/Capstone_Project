@@ -7,14 +7,6 @@ from django.contrib.auth import authenticate
 from .serializers import UserRegistrationSerializer, UserSerializer
 
 
-@api_view(['GET'])
-def protected_view(request):
-    # Check if user is logged in
-    if not request.user.is_authenticated:
-        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({'message': 'This is a protected endpoint'})
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -55,3 +47,11 @@ def login(request):
 def logout(request):
     # Simple logout (JWT tokens are stateless)
     return Response({'message': 'Logout successful'})
+
+
+@api_view(['GET'])
+def protected_view(request):
+    # Check if user is logged in
+    if not request.user.is_authenticated:
+        return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'message': 'This is a protected endpoint'})

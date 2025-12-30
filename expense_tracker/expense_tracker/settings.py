@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    'drf_spectacular',
     'apps.authentication',
     'apps.expenses',
     'apps.categories',
@@ -163,7 +162,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # JWT Configuration
@@ -175,9 +173,3 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
 }
 
-# API Documentation Settings
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Expense Tracker API',
-    'DESCRIPTION': 'A simple API for tracking personal expenses',
-    'VERSION': '1.0.0',
-}
