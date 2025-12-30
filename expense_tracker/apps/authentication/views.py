@@ -9,17 +9,21 @@ from .serializers import UserRegistrationSerializer, UserSerializer
 
 @api_view(['GET'])
 def protected_view(request):
+    # Check if user is logged in
     if not request.user.is_authenticated:
         return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
     return Response({'message': 'This is a protected endpoint'})
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
+    # Create new user account
     try:
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            # Create JWT tokens for the new user
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': UserSerializer(user).data,
@@ -30,9 +34,11 @@ def register(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
+    # Login user and return JWT tokens
     username = request.data.get('username')
     password = request.data.get('password')
     user = authenticate(username=username, password=password)
@@ -44,6 +50,8 @@ def login(request):
         })
     return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
+
 @api_view(['POST'])
 def logout(request):
+    # Simple logout (JWT tokens are stateless)
     return Response({'message': 'Logout successful'})

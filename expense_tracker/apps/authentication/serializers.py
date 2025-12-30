@@ -8,15 +8,8 @@ class UserRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField()
-    password2 = serializers.CharField()
-
-    def validate(self, data):
-        if data['password'] != data['password2']:
-            raise serializers.ValidationError("Passwords don't match")
-        return data
 
     def create(self, validated_data):
-        validated_data.pop('password2')  # Remove password2 before creating user
         try:
             user = User.objects.create_user(
                 username=validated_data['username'],
