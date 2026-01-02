@@ -7,11 +7,15 @@ def populate_categories(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
     predefined_categories = [
         'Groceries',
-        'Electricity', 
+        'Transportation', 
         'Utilities',
-        'Miscellaneous',
-        'Electronics',
-        'Clothing'
+        'Healthcare',
+        'Entertainment',
+        'Dining',
+        'Clothing',
+        'Education',
+        'Bills',
+        'Miscellaneous'
     ]
     
     for category_name in predefined_categories:
@@ -22,11 +26,15 @@ def reverse_populate_categories(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
     predefined_categories = [
         'Groceries',
-        'Electricity', 
+        'Transportation', 
         'Utilities',
-        'Miscellaneous',
-        'Electronics',
-        'Clothing'
+        'Healthcare',
+        'Entertainment',
+        'Dining',
+        'Clothing',
+        'Education',
+        'Bills',
+        'Miscellaneous'
     ]
     
     Category.objects.filter(name__in=predefined_categories).delete()
