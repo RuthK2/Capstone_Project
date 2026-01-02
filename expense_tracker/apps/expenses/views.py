@@ -121,10 +121,7 @@ def expense_summary(request):
         })
     
     # Budget tracking
-    from apps.authentication.models import UserProfile
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    monthly_budget = profile.monthly_budget
-    
+    monthly_budget = request.user.userprofile.monthly_budget
     budget_status = {
         'monthly_budget': monthly_budget,
         'spent': total_amount,
