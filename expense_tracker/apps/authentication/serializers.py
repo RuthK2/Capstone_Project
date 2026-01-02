@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.db import IntegrityError
+from .models import UserProfile
 
 
 class UserRegistrationSerializer(serializers.Serializer):
@@ -34,3 +35,9 @@ class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     username = serializers.CharField()
     email = serializers.EmailField()
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['monthly_budget']

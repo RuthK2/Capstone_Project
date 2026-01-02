@@ -1,11 +1,11 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .serializers import UserRegistrationSerializer
+from .serializers import UserRegistrationSerializer, UserProfileSerializer
 
 
 @api_view(['POST'])
@@ -54,3 +54,19 @@ def protected_view(request):
     if not request.user.is_authenticated:
         return Response({'error': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
     return Response({'message': 'This is a protected endpoint'})
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def budget(request):
+    # Get or update user's monthly budget
+    if request.method == 'GET':
+        budget_amount = request.user.userprofile.monthly_budget
+        return Response({'monthly_budget': budget_amount})
+    
+    elif request.method == 'PUT':
+        serializer = UserProfileSerializer(request.user.userprofile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Budget updated successfully', 'monthly_budget': serializer.data['monthly_budget']})
+        return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
