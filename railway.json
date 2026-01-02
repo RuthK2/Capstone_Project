@@ -3,7 +3,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "workingDirectory": "expense_tracker",
-    "startCommand": "python manage.py migrate --run-syncdb --verbosity=2 && python manage.py migrate --verbosity=2 && gunicorn expense_tracker.wsgi:application --bind 0.0.0.0:$PORT"
+    "startCommand": "python manage.py migrate --run-syncdb --verbosity=2 && python manage.py migrate --verbosity=2 && gunicorn expense_tracker.expense_tracker.wsgi:application --bind 0.0.0.0:$PORT"
   }
 }
