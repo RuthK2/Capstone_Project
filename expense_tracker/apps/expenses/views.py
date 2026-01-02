@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from django.db.models import Sum, Count, Avg
 from django.utils import timezone
@@ -11,9 +12,7 @@ from .filters import ExpenseFilter
 from .models import Expenses
 from .serializers import ExpensesSerializer
 
-# Constants
-MAX_STREAK_DAYS = 30
-HIGH_SPENDING_THRESHOLD = 100
+logger = logging.getLogger(__name__)
 
 
 class ExpensesPagination(PageNumberPagination):
@@ -30,7 +29,7 @@ def list_expenses(request):
     filtered_expenses = expense_filter.qs
     
     if not filtered_expenses.exists():
-        return Response({'message': 'No expenses found.'})
+        return Response({'error': 'No expenses found.'}, status=status.HTTP_404_NOT_FOUND)
     
     paginator = ExpensesPagination()
     paginated_expenses = paginator.paginate_queryset(filtered_expenses, request)
@@ -110,9 +109,13 @@ def summary(request):
             'percentage': round(percentage, 2)
         })
     
+    # Get monthly budget safely
+    monthly_budget = 0
     try:
-        monthly_budget = request.user.userprofile.monthly_budget
-    except AttributeError:
+        if hasattr(request.user, 'userprofile') and request.user.userprofile:
+            monthly_budget = request.user.userprofile.monthly_budget or 0
+    except Exception as e:
+        logger.warning(f"Error accessing user budget for user {request.user.id}: {e}")
         monthly_budget = 0
     
     budget_status = {
@@ -195,11 +198,8 @@ def insights(request):
                 f"Weekly spending: ${weekly_total}"
             ]
         })
-    except (ValueError, TypeError, AttributeError):
+    except Exception as e:
+        logger.error(f"Error generating insights for user {request.user.id}: {e}")
         return Response({
-            'weekly_spending': 0,
-            'daily_average': 0,
-            'spending_streak_days': 0,
-            'warnings': [],
-            'insights': ["No spending data available"]
-        })
+            'error': 'Unable to generate insights at this time'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
