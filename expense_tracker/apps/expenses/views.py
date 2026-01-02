@@ -199,17 +199,15 @@ def spending_insights(request):
         streak += 1
         current_date -= timedelta(days=1)
     
-    # Category warnings (spending 40% above average)
-    category_averages = expenses.values('category__name').annotate(
-        avg_amount=Avg('amount'),
-        recent_total=Sum('amount', filter=expenses.filter(date__gte=last_7_days).values('id'))
-    )
-    
+    # Category warnings (simplified)
     warnings = []
-    for cat in category_averages:
-        if cat['recent_total'] and cat['avg_amount']:
-            if cat['recent_total'] > (cat['avg_amount'] * 1.4):
-                warnings.append(f"{cat['category__name']} spending is above average")
+    if weekly_total > 0:
+        top_category = weekly_expenses.values('category__name').annotate(
+            total=Sum('amount')
+        ).order_by('-total').first()
+        
+        if top_category and top_category['total'] > (weekly_total * 0.5):
+            warnings.append(f"{top_category['category__name']} spending is above average")
     
     return Response({
         'weekly_spending': weekly_total,
