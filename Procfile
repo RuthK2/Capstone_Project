@@ -1,0 +1,1 @@
+web: python manage.py collectstatic --noinput && python manage.py migrate --run-syncdb --verbosity=2 && python manage.py migrate --verbosity=2 && gunicorn expense_tracker.expense_tracker.wsgi:application --bind 0.0.0.0:$PORT
