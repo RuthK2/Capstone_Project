@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from health import health_check
 
 def api_root(request):
     return JsonResponse({
@@ -25,7 +26,8 @@ def api_root(request):
             'auth': '/api/auth/',
             'categories': '/api/categories/',
             'expenses': '/api/expenses/',
-            'admin': '/admin/'
+            'admin': '/admin/',
+            'health': '/health/'
         }
     })
 
@@ -35,4 +37,5 @@ urlpatterns = [
     path('api/auth/', include('apps.authentication.urls')),
     path('api/categories/', include('apps.categories.urls')),
     path('api/expenses/', include('apps.expenses.urls')),
+    path('health/', health_check, name='health_check'),
 ]
