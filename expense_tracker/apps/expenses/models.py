@@ -13,6 +13,11 @@ class Expenses(models.Model):
 
     class Meta:
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=['user', 'date']),
+            models.Index(fields=['user', 'category']),
+            models.Index(fields=['date']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.description} - ${self.amount}"
