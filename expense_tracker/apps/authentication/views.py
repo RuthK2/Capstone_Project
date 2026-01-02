@@ -5,7 +5,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+import logging
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
+from .models import UserProfile
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])
@@ -16,14 +20,15 @@ def register(request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            # Create JWT tokens for the new user
-            refresh = RefreshToken.for_user(user)
+            # Ensure UserProfile is created
+            UserProfile.objects.get_or_create(user=user)
             return Response({
                 'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"Registration error: {str(e)}")
+        return Response({'error': 'Registration failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -60,13 +65,19 @@ def protected_view(request):
 @permission_classes([IsAuthenticated])
 def budget(request):
     # Get or update user's monthly budget
-    if request.method == 'GET':
-        budget_amount = request.user.userprofile.monthly_budget
-        return Response({'monthly_budget': budget_amount})
-    
-    elif request.method == 'PUT':
-        serializer = UserProfileSerializer(request.user.userprofile, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Budget updated successfully', 'monthly_budget': serializer.data['monthly_budget']})
-        return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        # Ensure UserProfile exists
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        
+        if request.method == 'GET':
+            return Response({'monthly_budget': profile.monthly_budget})
+        
+        elif request.method == 'PUT':
+            serializer = UserProfileSerializer(profile, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'Budget updated successfully', 'monthly_budget': serializer.data['monthly_budget']})
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Budget error: {str(e)}")
+        return Response({'error': 'Budget operation failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
