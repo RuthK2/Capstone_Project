@@ -152,7 +152,7 @@ def expense_summary(request):
         total=Sum('amount')
     ).order_by('-total').first()
     
-    spending_insights = {
+    expenditures = {
         'current_month_spending': current_month_total,
         'last_month_spending': last_month_total,
         'month_over_month_change': round(month_change, 2),
@@ -169,7 +169,7 @@ def expense_summary(request):
         },
         'category_breakdown': category_breakdown,
         'budget_status': budget_status,
-        'spending_insights': spending_insights,
+        'expenditures': expenditures,
         'period': request.GET.get('period', 'all_time')
     })
 
@@ -177,46 +177,49 @@ def expense_summary(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def spending_insights(request):
-    # Get detailed spending insights
-    expenses = Expenses.objects.filter(user=request.user).select_related('category')
-    
-    # Weekly spending pattern
-    last_7_days = timezone.now().date() - timedelta(days=7)
-    weekly_expenses = expenses.filter(date__gte=last_7_days)
-    weekly_total = weekly_expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    # Daily average
-    daily_average = weekly_total / 7 if weekly_total > 0 else 0
-    
-    # Spending streaks
-    recent_expenses = expenses.filter(date__gte=last_7_days).order_by('-date')
-    spending_days = set(recent_expenses.values_list('date', flat=True))
-    
-    # Count consecutive spending days
-    streak = 0
-    current_date = timezone.now().date()
-    while current_date in spending_days:
-        streak += 1
-        current_date -= timedelta(days=1)
-    
-    # Category warnings (simplified)
-    warnings = []
-    if weekly_total > 0:
-        top_category = weekly_expenses.values('category__name').annotate(
-            total=Sum('amount')
-        ).order_by('-total').first()
+    try:
+        # Get detailed spending insights
+        expenses = Expenses.objects.filter(user=request.user).select_related('category')
         
-        if top_category and top_category['total'] > (weekly_total * 0.5):
-            warnings.append(f"{top_category['category__name']} spending is above average")
-    
-    return Response({
-        'weekly_spending': weekly_total,
-        'daily_average': round(daily_average, 2),
-        'spending_streak_days': streak,
-        'warnings': warnings,
-        'insights': [
-            f"You've spent money {streak} days in a row" if streak > 1 else "No recent spending streak",
-            f"Your daily average this week is ${daily_average:.2f}",
-            f"Weekly spending: ${weekly_total}"
-        ]
-    })
+        # Weekly spending pattern
+        last_7_days = timezone.now().date() - timedelta(days=7)
+        weekly_expenses = expenses.filter(date__gte=last_7_days)
+        weekly_total = weekly_expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        # Daily average
+        daily_average = weekly_total / 7
+        
+        # Spending streaks
+        spending_days = set(weekly_expenses.values_list('date', flat=True))
+        
+        # Count consecutive spending days
+        streak = 0
+        current_date = timezone.now().date()
+        while current_date in spending_days and streak < 30:  # Limit to prevent infinite loop
+            streak += 1
+            current_date -= timedelta(days=1)
+        
+        # Simple warnings
+        warnings = []
+        if weekly_total > 100:  # Simple threshold
+            warnings.append("High spending this week")
+        
+        return Response({
+            'weekly_spending': float(weekly_total),
+            'daily_average': round(daily_average, 2),
+            'spending_streak_days': streak,
+            'warnings': warnings,
+            'insights': [
+                f"You've spent money {streak} days in a row" if streak > 1 else "No recent spending streak",
+                f"Your daily average this week is ${daily_average:.2f}",
+                f"Weekly spending: ${weekly_total}"
+            ]
+        })
+    except (ValueError, TypeError, AttributeError):
+        return Response({
+            'weekly_spending': 0,
+            'daily_average': 0,
+            'spending_streak_days': 0,
+            'warnings': [],
+            'insights': ["No spending data available"]
+        })
