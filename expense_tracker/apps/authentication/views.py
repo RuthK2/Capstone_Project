@@ -34,6 +34,10 @@ def login(request):
     password = request.data.get('password')
     user = authenticate(username=username, password=password)
     if user:
+        # Ensure UserProfile exists
+        from .models import UserProfile
+        UserProfile.objects.get_or_create(user=user)
+        
         refresh = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
@@ -60,12 +64,16 @@ def protected_view(request):
 @permission_classes([IsAuthenticated])
 def budget(request):
     # Get or update user's monthly budget
+    from .models import UserProfile
+    
+    # Ensure UserProfile exists
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
     if request.method == 'GET':
-        budget_amount = request.user.userprofile.monthly_budget
-        return Response({'monthly_budget': budget_amount})
+        return Response({'monthly_budget': profile.monthly_budget})
     
     elif request.method == 'PUT':
-        serializer = UserProfileSerializer(request.user.userprofile, data=request.data)
+        serializer = UserProfileSerializer(profile, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'Budget updated successfully', 'monthly_budget': serializer.data['monthly_budget']})
