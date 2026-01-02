@@ -3,6 +3,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "bash start.sh"
+    "startCommand": "python manage.py migrate && gunicorn expense_tracker.wsgi:application --bind 0.0.0.0:$PORT"
   }
 }
