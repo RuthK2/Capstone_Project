@@ -43,13 +43,7 @@ Authorization: Bearer <your_access_token>
 **Response (201 Created):**
 ```json
 {
-    "user": {
-        "id": 1,
-        "username": "newuser",
-        "email": "new@example.com"
-    },
-    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+    "message": "Registration successful"
 }
 ```
 
@@ -143,8 +137,8 @@ Authorization: Bearer <your_access_token>
 
 ```json
 {
-    "amount": "25.50",
-    "description": "Grocery shopping at Cleanshelf",
+    "amount": "100.00",
+    "description": "Grocery shopping at CarreFour",
     "category": 1
 }
 ```
@@ -154,7 +148,7 @@ Authorization: Bearer <your_access_token>
 {
     "id": 1,
     "amount": "25.50",
-    "description": "Grocery shopping at Naivas",
+    "description": "Grocery shopping at Carrefour",
     "category": {
         "id": 1,
         "name": "Groceries"

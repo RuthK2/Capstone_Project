@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .serializers import UserRegistrationSerializer, UserSerializer
+from .serializers import UserRegistrationSerializer
 
 
 @api_view(['POST'])
@@ -19,9 +19,7 @@ def register(request):
             # Create JWT tokens for the new user
             refresh = RefreshToken.for_user(user)
             return Response({
-                'user': UserSerializer(user).data,
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
