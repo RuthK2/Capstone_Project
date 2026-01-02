@@ -1,79 +1,32 @@
-import logging
 from datetime import timedelta
-from django.conf import settings
-from django.core.cache import cache
-from django.core.exceptions import ValidationError
-from django.db.models import Sum, Count, Avg, Q
+from django.db.models import Sum, Count, Avg
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 
 from .filters import ExpenseFilter
 from .models import Expenses
 from .serializers import ExpensesSerializer
 
-logger = logging.getLogger(__name__)
-
-# Configurable constants
-MAX_STREAK_DAYS = getattr(settings, 'EXPENSE_MAX_STREAK_DAYS', 30)
-MAX_PAGE_SIZE = getattr(settings, 'EXPENSE_MAX_PAGE_SIZE', 100)
-
-
-class ExpenseRateThrottle(UserRateThrottle):
-    scope = 'expense'
-
-
-class SummaryRateThrottle(UserRateThrottle):
-    scope = 'summary'
-
-
-def validate_query_params(request):
-    """Validate common query parameters"""
-    errors = []
-    
-    # Validate page_size
-    page_size = request.GET.get('page_size')
-    if page_size:
-        try:
-            page_size_int = int(page_size)
-            if page_size_int < 1 or page_size_int > MAX_PAGE_SIZE:
-                errors.append(f'page_size must be between 1 and {MAX_PAGE_SIZE}')
-        except ValueError:
-            errors.append('page_size must be a valid integer')
-    
-    # Validate period
-    valid_periods = ['weekly', 'monthly', 'last_3_months', 'yearly']
-    period = request.GET.get('period')
-    if period and period not in valid_periods:
-        errors.append(f'period must be one of: {", ".join(valid_periods)}')
-    
-    return errors
-
 
 class ExpensesPagination(PageNumberPagination):
     page_size = 5
     page_size_query_param = 'page_size'
-    max_page_size = MAX_PAGE_SIZE
+    max_page_size = 100
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_expenses(request):
-    # Validate query parameters
-    validation_errors = validate_query_params(request)
-    if validation_errors:
-        return Response({'error': validation_errors}, status=status.HTTP_400_BAD_REQUEST)
-    
     expenses = Expenses.objects.filter(user=request.user).select_related('category').order_by('-date')
     expense_filter = ExpenseFilter(request.GET, queryset=expenses)
     filtered_expenses = expense_filter.qs
     
     if not filtered_expenses.exists():
-        return Response({'error': 'No expenses found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': 'No expenses found.'})
     
     paginator = ExpensesPagination()
     paginated_expenses = paginator.paginate_queryset(filtered_expenses, request)
@@ -88,22 +41,16 @@ def list_expenses(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@throttle_classes([ExpenseRateThrottle])
 def create_expense(request):
     serializer = ExpensesSerializer(data=request.data)
     if serializer.is_valid():
-        expense = serializer.save(user=request.user)
-        # Clear user's summary cache when new expense is created
-        cache_pattern = f"summary_{request.user.id}_*"
-        cache.delete_many([key for key in cache._cache.keys() if key.startswith(f"summary_{request.user.id}_")])
-        logger.info(f"Created expense {expense.id} for user {request.user.id}")
+        serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-@throttle_classes([ExpenseRateThrottle])
 def update_expense(request, pk):
     try:
         expense = Expenses.objects.select_related('category').get(pk=pk, user=request.user)
@@ -113,16 +60,12 @@ def update_expense(request, pk):
     serializer = ExpensesSerializer(expense, data=request.data)
     if serializer.is_valid():
         serializer.save()
-        # Clear user's summary cache when expense is updated
-        cache.delete_many([key for key in cache._cache.keys() if key.startswith(f"summary_{request.user.id}_")])
-        logger.info(f"Updated expense {pk} for user {request.user.id}")
         return Response(serializer.data)
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-@throttle_classes([ExpenseRateThrottle])
 def delete_expense(request, pk):
     try:
         expense = Expenses.objects.get(pk=pk, user=request.user)
@@ -130,43 +73,20 @@ def delete_expense(request, pk):
         return Response({'error': 'Expense not found.'}, status=status.HTTP_404_NOT_FOUND)
     
     expense.delete()
-    # Clear user's summary cache when expense is deleted
-    cache.delete_many([key for key in cache._cache.keys() if key.startswith(f"summary_{request.user.id}_")])
-    logger.info(f"Deleted expense {pk} for user {request.user.id}")
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-@throttle_classes([SummaryRateThrottle])
 def summary(request):
-    # Validate query parameters
-    validation_errors = validate_query_params(request)
-    if validation_errors:
-        return Response({'error': validation_errors}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Create cache key based on user and filters
-    cache_key = f"summary_{request.user.id}_{hash(str(sorted(request.GET.items())))}"
-    cached_result = cache.get(cache_key)
-    if cached_result:
-        logger.info(f"Cache hit for summary user {request.user.id}")
-        return Response(cached_result)
-    
     expenses = Expenses.objects.filter(user=request.user).select_related('category')
     expense_filter = ExpenseFilter(request.GET, queryset=expenses)
     filtered_expenses = expense_filter.qs
     
-    # Optimize: Single query for all aggregations
-    current_month = timezone.now().date().replace(day=1)
-    last_month = (current_month - timedelta(days=1)).replace(day=1)
-    
-    # Combined aggregation query
-    summary_data = filtered_expenses.aggregate(
+    totals = filtered_expenses.aggregate(
         total_amount=Sum('amount'),
         total_count=Count('id'),
-        average_amount=Avg('amount'),
-        current_month_total=Sum('amount', filter=Q(date__gte=current_month)),
-        last_month_total=Sum('amount', filter=Q(date__gte=last_month, date__lt=current_month))
+        average_amount=Avg('amount')
     )
     
     categories = filtered_expenses.values('category__name').annotate(
@@ -174,11 +94,9 @@ def summary(request):
         count=Count('id')
     ).order_by('-total')
     
-    total_amount = summary_data['total_amount'] or 0
-    current_month_total = summary_data['current_month_total'] or 0
-    last_month_total = summary_data['last_month_total'] or 0
-    
+    total_amount = totals['total_amount'] or 0
     category_breakdown = []
+    
     for cat in categories:
         percentage = (cat['total'] / total_amount * 100) if total_amount > 0 else 0
         category_breakdown.append({
@@ -188,13 +106,9 @@ def summary(request):
             'percentage': round(percentage, 2)
         })
     
-    # Get monthly budget safely
-    monthly_budget = 0
     try:
-        if hasattr(request.user, 'userprofile') and request.user.userprofile:
-            monthly_budget = request.user.userprofile.monthly_budget or 0
-    except Exception as e:
-        logger.warning(f"Error accessing user budget for user {request.user.id}: {e}")
+        monthly_budget = request.user.userprofile.monthly_budget
+    except AttributeError:
         monthly_budget = 0
     
     budget_status = {
@@ -204,14 +118,21 @@ def summary(request):
         'percentage_used': round((total_amount / monthly_budget * 100), 2) if monthly_budget > 0 else 0
     }
     
-    # Calculate month-over-month change
+    current_month = timezone.now().date().replace(day=1)
+    last_month = (current_month - timedelta(days=1)).replace(day=1)
+    
+    current_month_expenses = filtered_expenses.filter(date__gte=current_month)
+    current_month_total = current_month_expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    last_month_expenses = filtered_expenses.filter(date__gte=last_month, date__lt=current_month)
+    last_month_total = last_month_expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    
     if last_month_total > 0:
         month_change = ((current_month_total - last_month_total) / last_month_total) * 100
     else:
         month_change = 100 if current_month_total > 0 else 0
     
-    # Get top category for current month (optimized)
-    top_category = filtered_expenses.filter(date__gte=current_month).values('category__name').annotate(
+    top_category = current_month_expenses.values('category__name').annotate(
         total=Sum('amount')
     ).order_by('-total').first()
     
@@ -224,23 +145,17 @@ def summary(request):
         'top_category_amount': top_category['total'] if top_category else 0
     }
     
-    result = {
+    return Response({
         'summary': {
             'total_amount': total_amount,
-            'total_count': summary_data['total_count'] or 0,
-            'average_amount': round(summary_data['average_amount'] or 0, 2)
+            'total_count': totals['total_count'] or 0,
+            'average_amount': round(totals['average_amount'] or 0, 2)
         },
         'category_breakdown': category_breakdown,
         'budget_status': budget_status,
         'spending_insights': spending_insights,
         'period': request.GET.get('period', 'all_time')
-    }
-    
-    # Cache for 5 minutes
-    cache.set(cache_key, result, 300)
-    logger.info(f"Cached summary for user {request.user.id}")
-    
-    return Response(result)
+    })
 
 
 @api_view(['GET'])
@@ -257,14 +172,12 @@ def insights(request):
         streak = 0
         current_date = timezone.now().date()
         
-        while current_date in spending_days and streak < MAX_STREAK_DAYS:
+        while current_date in spending_days and streak < 30:
             streak += 1
             current_date -= timedelta(days=1)
         
         warnings = []
-        # Dynamic threshold based on user's average
-        user_avg = expenses.aggregate(Avg('amount'))['amount__avg'] or 0
-        if weekly_total > user_avg * 7 * 1.5:  # 50% above weekly average
+        if weekly_total > 100:
             warnings.append("High spending this week")
         
         return Response({
@@ -278,8 +191,11 @@ def insights(request):
                 f"Weekly spending: ${weekly_total}"
             ]
         })
-    except Exception as e:
-        logger.error(f"Error generating insights for user {request.user.id}: {e}")
+    except (ValueError, TypeError, AttributeError):
         return Response({
-            'error': 'Unable to generate insights at this time'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            'weekly_spending': 0,
+            'daily_average': 0,
+            'spending_streak_days': 0,
+            'warnings': [],
+            'insights': ["No spending data available"]
+        })

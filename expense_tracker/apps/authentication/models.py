@@ -8,5 +8,8 @@ class UserProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        db_table = 'user_profile'
+
     def __str__(self):
-        return f"{self.user.username} - Budget: ${self.monthly_budget}"
+        return f"UserProfile {self.id}"
