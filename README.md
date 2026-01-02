@@ -1,9 +1,29 @@
 # Expense Tracker API
 
-A simple REST API built with Django that helps users track their personal expenses. Users can register, login, add expenses, and view summaries of their spending.
-
+A simple REST API built with Django that helps users track their personal expenses. with advanced features like smart insights, budget tracking, and expense tagging.
 ## 🚀 Live API
 **Base URL:** `https://web-production-c227c.up.railway.app`
+
+## ✨ Features
+- **Smart Expense Tagging** - Organize with flexible tags
+- **Monthly Budget Tracking** - Set budgets and track progress  
+- **Smart Spending Insights** - Get intelligent spending analysis
+
+## 🛠️ Setup
+
+**Prerequisites:** Python 3.8+, pip
+
+**Installation:**
+```bash
+git clone <your-repo-url>
+cd Capstone_Project
+pip install -r requirements.txt
+cd expense_tracker
+python manage.py migrate
+python manage.py runserver
+```
+
+**Access:** `http://127.0.0.1:8000`
 
 ## 📋 What You Can Do
 - Register and login securely
@@ -16,14 +36,18 @@ A simple REST API built with Django that helps users track their personal expens
 - View detailed analytics and spending summaries
 
 ## 📋 Table of Contents
-- [Authentication](#authentication)
-- [Budget Management](#budget-management)
-- [Categories](#categories)
-- [Expenses](#expenses)
-- [Filtering & Analytics](#filtering--analytics)
-- [Smart Insights](#smart-insights)
-- [Error Handling](#error-handling)
-- [Technology Stack](#technology-stack)
+- [Unique Features](#-unique-features)
+- [Local Setup](#️-local-setup)
+- [Authentication](#-authentication)
+- [Budget Management](#-budget-management)
+- [Categories](#-categories)
+- [Expenses](#-expenses)
+- [Filtering & Analytics](#-filtering--analytics)
+- [Smart Insights](#-smart-insights)
+- [Error Handling](#-error-handling)
+- [Technology Stack](#️-technology-stack)
+- [Project Structure](#-project-structure)
+- [Testing](#-testing)
 
 ## 🔐 Authentication
 
@@ -126,7 +150,7 @@ Authorization: Bearer <your_access_token>
 **Response (200 OK):**
 ```json
 {
-    "count": 6,
+    "count": 10,
     "next": null,
     "previous": null,
     "results": [
@@ -137,7 +161,7 @@ Authorization: Bearer <your_access_token>
         },
         {
             "id": 2,
-            "name": "Electricity",
+            "name": "Transportation",
             "description": ""
         },
         {
@@ -147,17 +171,37 @@ Authorization: Bearer <your_access_token>
         },
         {
             "id": 4,
-            "name": "Miscellaneous",
+            "name": "Healthcare",
             "description": ""
         },
         {
             "id": 5,
-            "name": "Electronics",
+            "name": "Entertainment",
             "description": ""
         },
         {
             "id": 6,
+            "name": "Dining",
+            "description": ""
+        },
+        {
+            "id": 7,
             "name": "Clothing",
+            "description": ""
+        },
+        {
+            "id": 8,
+            "name": "Education",
+            "description": ""
+        },
+        {
+            "id": 9,
+            "name": "Bills",
+            "description": ""
+        },
+        {
+            "id": 10,
+            "name": "Miscellaneous",
             "description": ""
         }
     ]
@@ -393,12 +437,40 @@ All list endpoints support pagination:
 }
 ```
 
-## 🛠 Technology Stack
-- **Backend:** Django (Python web framework)
-- **Database:** SQLite
-- **Authentication:** JWT tokens
-- **API:** Django REST Framework
+## 🛠️ Technology Stack
+- **Backend:** Django 5.0+ (Python web framework)
+- **Database:** SQLite (development), PostgreSQL (production)
+- **Authentication:** JWT tokens (djangorestframework-simplejwt)
+- **API:** Django REST Framework 3.14+
+- **Documentation:** drf-spectacular
 - **Deployment:** Railway
+- **Environment:** python-dotenv for configuration
+
+## 📁 Project Structure
+```
+expense_tracker/
+├── apps/
+│   ├── authentication/     # User auth & budget management
+│   ├── categories/         # Expense categories
+│   └── expenses/          # Core expense functionality
+├── expense_tracker/       # Django settings & config
+├── tests/                # Unit tests
+└── manage.py            # Django management script
+```
+
+## 🧪 Testing
+Run the test suite:
+```bash
+cd expense_tracker
+python manage.py test
+```
+
+Test coverage includes:
+- Authentication endpoints
+- CRUD operations for expenses
+- Budget management
+- Smart insights calculations
+- Error handling scenarios
 
 ## 🔗 Quick Start
 
