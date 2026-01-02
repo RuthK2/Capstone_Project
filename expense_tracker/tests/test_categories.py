@@ -28,14 +28,14 @@ class CategoryAPITestCase(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertGreaterEqual(len(data), 7)  # 6 predefined + 1 test category
+        self.assertGreaterEqual(len(data), 11)  # 10 predefined + 1 test category
 
     def test_predefined_categories_exist(self):
-        """Test that predefined categories from roadmap exist"""
+        """Test that predefined categories from migration exist"""
         url = reverse('category-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_categories = ['Groceries', 'Electricity', 'Utilities', 'Miscellaneous', 'Electronics', 'Clothing']
+        expected_categories = ['Groceries', 'Transportation', 'Utilities', 'Healthcare', 'Entertainment', 'Dining', 'Clothing', 'Education', 'Bills', 'Miscellaneous']
         data = response.data
         category_names = [cat.get('name', '') for cat in data]
         for expected in expected_categories:
