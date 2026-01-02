@@ -7,6 +7,7 @@ class Expenses(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     category = models.ForeignKey('categories.Category', on_delete=models.CASCADE)
+    tags = models.CharField(max_length=200, blank=True, help_text="Comma-separated tags (e.g., work,family,emergency)")
     date = models.DateField(auto_now_add=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
