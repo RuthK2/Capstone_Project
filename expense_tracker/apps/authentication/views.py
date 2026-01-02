@@ -16,19 +16,22 @@ logger = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 def register(request):
     # Create new user account
-    try:
-        serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
+    serializer = UserRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        try:
             user = serializer.save()
             # Ensure UserProfile is created
             UserProfile.objects.get_or_create(user=user)
+            logger.info(f"User {user.username} registered successfully")
             return Response({
                 'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Registration error during user creation: {str(e)}")
+            return Response({'error': 'Registration failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        logger.warning(f"Registration validation failed: {serializer.errors}")
         return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
-        return Response({'error': 'Registration failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
