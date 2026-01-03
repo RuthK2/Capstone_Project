@@ -1,1 +1,1 @@
-web: gunicorn expense_tracker.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn expense_tracker.expense_tracker.wsgi:application --bind 0.0.0.0:$PORT
