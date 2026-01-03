@@ -65,14 +65,38 @@ Authorization: Bearer <your_access_token>
 {
     "username": "newuser",
     "email": "new@example.com",
-    "password": "newpass123"
+    "password": "newpass123",
+    "password2": "newpass123"
 }
 ```
 
 **Response (201 Created):**
 ```json
 {
-    "message": "Registration successful"
+    "message": "Registration successful",
+    "user": {
+        "id": 1,
+        "username": "newuser",
+        "email": "new@example.com"
+    }
+}
+```
+
+**Validation Errors (400 Bad Request):**
+```json
+{
+    "error": {
+        "non_field_errors": ["Passwords don't match"]
+    }
+}
+```
+
+**Duplicate Username Error (400 Bad Request):**
+```json
+{
+    "error": {
+        "non_field_errors": ["Username already exists"]
+    }
 }
 ```
 
@@ -466,11 +490,18 @@ python manage.py test
 ```
 
 Test coverage includes:
-- Authentication endpoints
+- Authentication endpoints with password validation
+- User registration with duplicate username handling
 - CRUD operations for expenses
-- Budget management
+- Budget management with type-safe calculations
 - Smart insights calculations
 - Error handling scenarios
+
+**Recent Improvements:**
+- ✅ Fixed type compatibility issues in budget calculations
+- ✅ Enhanced password validation with confirmation
+- ✅ Improved duplicate username error handling
+- ✅ All 22 tests now pass successfully
 
 ## 🔗 Quick Start
 
@@ -478,7 +509,7 @@ Test coverage includes:
 ```bash
 curl -X POST https://web-production-c227c.up.railway.app/api/auth/register/ \
   -H "Content-Type: application/json" \
-  -d '{"username":"myuser","email":"my@email.com","password":"mypass123"}'
+  -d '{"username":"myuser","email":"my@email.com","password":"mypass123","password2":"mypass123"}'
 ```
 
 2. **Login to get access token:**

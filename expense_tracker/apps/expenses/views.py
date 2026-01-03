@@ -112,10 +112,10 @@ def summary(request):
         monthly_budget = 0
     
     budget_status = {
-        'monthly_budget': monthly_budget,
-        'spent': total_amount,
-        'remaining': monthly_budget - total_amount,
-        'percentage_used': round((total_amount / monthly_budget * 100), 2) if monthly_budget > 0 else 0
+        'monthly_budget': float(monthly_budget),
+        'spent': float(total_amount),
+        'remaining': float(monthly_budget) - float(total_amount),
+        'percentage_used': round((float(total_amount) / float(monthly_budget) * 100), 2) if monthly_budget > 0 else 0
     }
     
     current_month = timezone.now().date().replace(day=1)

@@ -19,7 +19,14 @@ def register(request):
     if serializer.is_valid():
         user = serializer.save()
         UserProfile.objects.get_or_create(user=user)
-        return Response({'message': 'Registration successful'}, status=status.HTTP_201_CREATED)
+        return Response({
+            'message': 'Registration successful',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+        }, status=status.HTTP_201_CREATED)
     return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
