@@ -18,7 +18,6 @@ A simple REST API built with Django that helps users track their personal expens
 git clone <your-repo-url>
 cd Capstone_Project
 pip install -r requirements.txt
-cd expense_tracker
 python manage.py migrate
 python manage.py runserver
 ```
@@ -472,20 +471,28 @@ All list endpoints support pagination:
 
 ## 📁 Project Structure
 ```
-expense_tracker/
-├── apps/
+Capstone_Project/              # Root directory
+├── manage.py                 # Django management script
+├── requirements.txt          # Python dependencies
+├── .env                     # Environment variables
+├── Procfile                 # Railway deployment config
+├── nixpacks.toml           # Railway build configuration
+├── apps/                   # Django applications
 │   ├── authentication/     # User auth & budget management
 │   ├── categories/         # Expense categories
 │   └── expenses/          # Core expense functionality
-├── expense_tracker/       # Django settings & config
-├── tests/                # Unit tests
-└── manage.py            # Django management script
+└── expense_tracker/       # Django project settings
+    ├── settings.py        # Main configuration
+    ├── urls.py           # URL routing
+    ├── wsgi.py          # WSGI application
+    ├── asgi.py          # ASGI application
+    ├── staticfiles/     # Static files for production
+    └── tests/          # Unit tests
 ```
 
 ## 🧪 Testing
 Run the test suite:
 ```bash
-cd expense_tracker
 python manage.py test
 ```
 
@@ -501,6 +508,8 @@ Test coverage includes:
 - ✅ Fixed type compatibility issues in budget calculations
 - ✅ Enhanced password validation with confirmation
 - ✅ Improved duplicate username error handling
+- ✅ Simplified project structure for easier deployment
+- ✅ Successfully deployed on Railway platform
 - ✅ All 22 tests now pass successfully
 
 ## 🔗 Quick Start
